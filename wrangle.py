@@ -33,10 +33,13 @@ def prepare_zillow_data(df):
     #drop null values
     df = df.dropna()
     # change fips codes to actual county name
-    df['County_Code'].mask(df['County_Code'] == 6037, 'Los Angeles', inplace=True)
+    df['County_Code'].mask(df['County_Code'] == 6037, 'LA', inplace=True)
     df['County_Code'].mask(df['County_Code'] == 6111, 'Ventura', inplace=True)
     df['County_Code'].mask(df['County_Code'] == 6059, 'Orange', inplace=True)
     df.rename(columns = {'County_Code':'County'}, inplace = True)
+    # one-hot encode County and concat to df
+    dummy_df = pd.get_dummies(df[['County']],dummy_na=False, drop_first=False)
+    df = pd.concat([df, dummy_df], axis=1)
     #limit homes to 1 bed , .5 bath, and at least 120sq ft     
     df = df[df.Square_Feet> 120]
     df = df[df.Number_of_Bedrooms > 0]
@@ -81,3 +84,9 @@ def scale_zillow_data(train):
     train_scaled = train.copy()
     train_scaled[columns_to_scale] = scaler.fit_transform(train_scaled[columns_to_scale])
     return train_scaled
+
+def create_county_db(df):
+    LA = df[df.County == 'LA']
+    Orange = df[df.County == 'Orange']
+    Ventura = df[df.County == 'Ventura']   
+    return LA, Orange, Ventura 
